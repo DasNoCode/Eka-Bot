@@ -27,6 +27,7 @@ src/
 
 This is my **first Telegram bot**, made while learning Python and Telegram APIs.  
 It's still a work in progress, and I’m always open to feedback or suggestions!
+
 A few features are currently not functioning as expected — fixes are in progress and will be released soon.
 
 ---
