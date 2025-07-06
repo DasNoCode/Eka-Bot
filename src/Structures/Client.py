@@ -39,11 +39,27 @@ class SuperClient(Client):
         return db(self.database)
 
     async def admincheck(self, message):
-        if str(message.chat.type)[len("ChatType.") :].strip() in ["GROUP", "SUPERGROUP", "CHANNEL"]:
-            user = await self.get_chat_member(message.chat.id, message.from_user.id)
+        if message.chat_type in ["GROUP", "SUPERGROUP", "CHANNEL"]:
+            print(message)
+            user = await self.get_chat_member(message.chat_id, message.sender.user_id)
             user_status = str(user.status)[len("ChatMemberStatus.") :].strip()
-            is_admin = user_status in {"OWNER", "ADMINISTRATOR"}
-            print(user_status, is_admin)
+            user_permissions = user.privileges
+            if user_permissions is not None:
+                if all([
+                    user_permissions.can_change_info,
+                    user_permissions.can_delete_messages,
+                    user_permissions.can_invite_users,
+                    user_permissions.can_restrict_members,
+                    user_permissions.can_pin_messages,
+                    user_permissions.can_promote_members,
+                    user_permissions.can_manage_chat,
+                    user_permissions.can_manage_video_chats
+                ]):
+                    is_admin = True
+                else: 
+                    is_admin = False
+            else:
+                is_admin = False
             return user_status, is_admin
         return "USER", True
 

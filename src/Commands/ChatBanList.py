@@ -8,7 +8,7 @@ class Command(BaseCommand):
             handler,
             {
                 "command": "banlist",
-                "category": "core",
+                "category": "chat",
                 "xp": False,
                 "AdminOnly": False,
                 "OwnerOnly": False,

@@ -12,7 +12,7 @@ class Command(BaseCommand):
             handler,
             {
                 "command": "set",
-                "category": "core",
+                "category": "chat",
                 "xp": False,
                 "AdminOnly": True,
                 "OwnerOnly": False,

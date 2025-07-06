@@ -6,101 +6,124 @@ import string
 from captcha.image import ImageCaptcha
 from pyrogram.types import ChatPermissions, InlineKeyboardButton, InlineKeyboardMarkup
 
-from Handler.EventHandler import CHAT_IDS
+from Handler.EventHandler import EventHandler
 from Structures.Command.BaseCommand import BaseCommand
 from Structures.Message import Message
 
 
 class Command(BaseCommand):
+
     def __init__(self, client, handler):
         super().__init__(
             client,
             handler,
             {
                 "command": "captcha",
-                "category": "core",
+                "category": "chat",
                 "xp": False,
-                "AdminOnly": True,
+                "AdminOnly": False,
                 "OwnerOnly": False,
-                "ChatOnly" : True,
-                "description": {"content": "Prevents bots from joining"},
-            },
+                "ChatOnly": True,
+                "description": {
+                    "content": "Prevents bots from joining"
+                },
+            }
         )
-        self.captcha_code = None
-        self.captcha_message_id = None
+        self.generatedCaptchaCode = None
+        self.captchaMessageId = None
 
-    async def exec(self, M: Message, context):
+    async def exec(self, message: Message, context):
 
-        user_id = int(context[2].get("user_id"))
-        user = await self.client.get_users(user_id)
+        previousMessageId = EventHandler.msg_id
 
-        if not M.is_callback:
+        if not message.is_callback:
             return
 
-        if not M.isAdmin:
-            print(M.sender.user_id)
-            if user_id != M.sender.user_id:
-                return await self.client.answer_callback_query(
-                    callback_query_id=M.message_id,
-                    text="This Captcha isn't for you!",
-                    show_alert=True,
-                )
+        userIdFromContext = int(context[2].get("user_id"))
+
+        if userIdFromContext != message.sender.user_id and not message.isAdmin:
+            return
 
         if context[2].get("code"):
-            if context[2].get("code") == self.captcha_code:
+            if context[2].get("code") == self.generatedCaptchaCode:
                 await self.client.restrict_chat_member(
-                    M.chat_id,
-                    user_id,
+                    message.chat_id,
+                    userIdFromContext,
                     ChatPermissions(
-                        can_send_messages=True, can_send_media_messages=True
+                        can_send_messages=True,
+                        can_send_media_messages=True
                     ),
                 )
+
+                await self.client.delete_messages(
+                    message.chat_id,
+                    self.captchaMessageId
+                )
+
                 await self.client.send_message(
-                    M.chat_id, f"@{user.username}, __welcome to the chat.__"
+                    message.chat_id,
+                    f"@{message.sender.user_name}, __Enjoy your stay here! And use /help to get all the bot commands.__"
                 )
             else:
-                await self.client.ban_chat_member(M.chat_id, user_id)
+                await self.client.ban_chat_member(
+                    message.chat_id,
+                    userIdFromContext
+                )
 
-            await self.client.delete_messages(M.chat_id, self.captcha_message_id)
+            await self.client.delete_messages(
+                message.chat_id,
+                previousMessageId
+            )
             return
 
-        random_text = lambda: "".join(
+        generateRandomCode = lambda: "".join(
             random.choices(string.ascii_letters + string.digits, k=5)
         )
-        codes = {f"code{i}": random_text() for i in range(1, 4)}
-        self.captcha_code = random.choice(list(codes.values()))
 
-        captcha_image = ImageCaptcha(fonts=["src/CaptchaFonts/Roboto-Thin.ttf"])
-        captcha_image.write(self.captcha_code, "Captcha.png")
+        captchaCodeOptions = {
+            f"code{i}": generateRandomCode() for i in range(1, 4)
+        }
 
-        await self.client.delete_messages(M.chat_id, CHAT_IDS.get(user_id))
+        self.generatedCaptchaCode = random.choice(list(captchaCodeOptions.values()))
 
-        message = await self.client.send_photo(
-            M.chat_id,
-            "Captcha.png",
+        captchaImage = ImageCaptcha(fonts=["src/CaptchaFonts/Roboto-Thin.ttf"])
+        imagePath = f"src/Images/{userIdFromContext}.png"
+        captchaImage.write(self.generatedCaptchaCode, imagePath)
+
+        await self.client.delete_messages(
+            message.chat_id,
+            previousMessageId
+        )
+
+        captchaPromptMessage = await self.client.send_photo(
+            message.chat_id,
+            imagePath,
             caption="__Here is your Captcha! Solve it within 1 minute.__",
             reply_markup=InlineKeyboardMarkup(
                 [
                     [
                         InlineKeyboardButton(
                             text=code,
-                            callback_data=f"/captcha --code={code} --user_id={user_id}",
+                            callback_data=f"/captcha --code={code} --user_id={userIdFromContext}"
                         )
                     ]
-                    for code in codes.values()
+                    for code in captchaCodeOptions.values()
                 ]
             ),
         )
-        self.captcha_message_id = message.id
 
-        asyncio.create_task(self.timer(M.chat_id))
-        os.remove("Captcha.png")
+        self.captchaMessageId = captchaPromptMessage.id
 
-    async def timer(self, chat_id):
+        asyncio.create_task(self.startCaptchaTimer(message.chat_id))
+
+        os.remove(imagePath)
+
+    async def startCaptchaTimer(self, chatId):
         try:
             await asyncio.sleep(60)
             await self.client.delete_messages(
-                chat_id=chat_id, message_ids=self.captcha_message_id
+                chat_id=chatId,
+                message_ids=self.captchaMessageId
             )
-        except Exception as e:
+        except Exception:
             pass

@@ -16,7 +16,7 @@ class Command(BaseCommand):
             handler,
             {
                 "command": "tts",
-                "category": "media",
+                "category": "general",
                 "xp": True,
                 "AdminOnly": False,
                 "OwnerOnly": False,

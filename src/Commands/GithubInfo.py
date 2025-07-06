@@ -12,7 +12,7 @@ class Command(BaseCommand):
             handler,
             {
                 "command": "git",
-                "category": "utility",
+                "category": "general",
                 "xp": True,
                 "AdminOnly": False,
                 "OwnerOnly": False,

@@ -36,11 +36,15 @@ class MessageHandler:
         commandName = commandContext[0]
         commandObj = self.commandMap.get(commandName)
         userData = self.__client.db.User.get_user(M.sender.user_id)
-
-
-        if commandObj.config.ChatOnly is False and M.chat_type not in ["GROUP", "SUPERGROUP", "CHANNEL"]:
+        
+        if not commandObj:
+            return await self.__client.send_message(
+                M.chat_id,
+                "__Command does not available!!__"
+            )
+        
+        if commandObj.config.ChatOnly and M.chat_type not in ["GROUP", "SUPERGROUP", "CHANNEL"]:
             return await self.__client.send_message(M.chat_id, f"__@{M.sender.user_name} this command can't be used in PRIVATE chat!__")
-
 
         if M.message.split()[0] != "/afk":
             if userData["afk"]["is_afk"]:
@@ -85,11 +89,7 @@ class MessageHandler:
             )
 
 
-        if not commandObj:
-            return await self.__client.send_message(
-                M.chat_id,
-                "__Command does not available!!__"
-            )
+
 
         if commandObj.config.xp:
             try:

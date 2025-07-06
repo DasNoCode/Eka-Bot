@@ -10,7 +10,7 @@ class Command(BaseCommand):
             handler,
             {
                 "command": "chatid",
-                "category": "core",
+                "category": "chat",
                 "xp": False,
                 "AdminOnly": False,
                 "OwnerOnly": False,

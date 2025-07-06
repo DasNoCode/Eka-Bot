@@ -30,7 +30,12 @@ class Command(BaseCommand):
             usermentioned_user = M.mentioned[0]
             user_name = usermentioned_user.user_name
             user_id = usermentioned_user.user_id
-
+        else:
+            return await self.client.send_message(
+                M.chat_id,
+                f"@{M.sender.user_name} reply to a user or mention a user to **demote** the user!"
+            )
+        
         await self.client.promote_chat_member(
             M.chat_id,
             user_id,

@@ -11,7 +11,7 @@ class Command(BaseCommand):
             client,
             handler,
             {
-                "command": "chatprofile",
+                "command": "set_chat_profile",
                 "category": "chat",
                 "xp": True,
                 "AdminOnly": True,

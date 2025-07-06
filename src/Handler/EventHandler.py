@@ -1,15 +1,15 @@
 from pyrogram.types import ChatPermissions, InlineKeyboardButton, InlineKeyboardMarkup
-
 from Structures.Client import SuperClient
 
-CHAT_IDS = {}
 
 
 class EventHandler:
 
+    msg_id = 0
+
     def __init__(self, client: SuperClient):
         self.__client = client
-
+        
     async def handler(self, message):
         chat_data = self.__client.db.Chat.get_chat_data(message.chat.id)
         if str(message.service).split(".")[-1] == "NEW_CHAT_MEMBERS":
@@ -28,31 +28,33 @@ class EventHandler:
                         [
                             InlineKeyboardButton(
                                 "Captcha",
-                                callback_data=f"/captcha --type=btn --user_id={self.member.id}",
+                                callback_data=f"/captcha --type=captcha_btn --user_id={self.member.id}",
                             )
                         ]
                     ]
                 )
                 msg = await self.__client.send_message(
                     message.chat.id,
-                    f"__@{self.member.username} has joined the Chat !\nSolve the captcha__",
+                    f"__@{self.member.username} Thank for joining!\nTo proof you are human slove this **captcha**!__",
                     reply_markup=keybord,
                 )
-
-                CHAT_IDS[self.member.id] = msg.id
+                EventHandler.msg_id = msg.id
+                print("msg_id:", EventHandler.msg_id)
+                
 
 
         if not chat_data.get("settings").get("events"):
             return
         if str(message.service).split(".")[-1] == "NEW_CHAT_MEMBERS":
-            await self.__client.send_message(
-                message.chat.id,
-                f"__@{self.member.username} has joined the Chat !__",
-            )
+            if not chat_data.get("settings").get("captchas"):
+                await self.__client.send_message(
+                    message.chat.id,
+                    f"__@{self.member.username} has joined the Chat!__",
+                )
         elif str(message.service).split(".")[-1] == "LEFT_CHAT_MEMBERS":
             await self.__client.send_message(
                 message.chat.id,
-                f"__@{message.left_chat_member.username} has left the Chat.__",
+                f"__@{message.left_chat_member.username} has left the Chat!__",
             )
         elif str(message.service).split(".")[-1] == "PINNED_MESSAGE":
             await self.__client.send_message(message.chat.id, f"__A new message has been pinned by @{message.from_user.username}./nCheck now !__",)

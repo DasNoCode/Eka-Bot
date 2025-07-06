@@ -12,7 +12,7 @@ class Command(BaseCommand):
             handler,
             {
                 "command": "afk",
-                "category": "core",
+                "category": "chat",
                 "xp": False,
                 "AdminOnly": False,
                 "OwnerOnly": False,

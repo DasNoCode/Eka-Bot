@@ -15,7 +15,7 @@ class Command(BaseCommand):
                 "AdminOnly": True,
                 "OwnerOnly": False,
                 "ChatOnly" : True,
-                "description": {"content": "kick the user from the chat"},
+                "description": {"content": "Prevents bots by verifying new users with a captcha challenge."},
             },
         )
 

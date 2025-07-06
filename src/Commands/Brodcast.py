@@ -10,7 +10,7 @@ class Command(BaseCommand):
             handler,
             {
                 "command": "brodcast",
-                "category": "core",
+                "category": "owner",
                 "xp": False,
                 "AdminOnly": False,
                 "OwnerOnly": True,

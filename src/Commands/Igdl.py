@@ -12,7 +12,7 @@ class Command(BaseCommand):
             handler,
             {
                 "command": "igdl",
-                "category": "media",
+                "category": "downloader",
                 "xp": True,
                 "AdminOnly": False,
                 "OwnerOnly": False,

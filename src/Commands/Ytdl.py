@@ -15,7 +15,7 @@ class Command(BaseCommand):
             handler,
             {
                 "command": "ytdl",
-                "category": "media",
+                "category": "downloader",
                 "xp": True,
                 "AdminOnly": False,
                 "OwnerOnly": False,

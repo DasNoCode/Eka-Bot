@@ -9,7 +9,7 @@ class Command(BaseCommand):
             handler,
             {
                 "command": "chat_leaderboard",
-                "category": "core",
+                "category": "chat",
                 "xp": False,
                 "AdminOnly": False,
                 "OwnerOnly": False,

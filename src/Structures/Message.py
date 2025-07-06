@@ -107,7 +107,7 @@ class Message:
         self.bot_userid = (await self.__client.get_me()).id
         self.urls = self.__client.utils.extract_links(self.message)
         self.numbers = self.__client.utils.extract_numbers(self.message)
-        self.user_status, self.isAdmin = await self.__client.admincheck(self.__m)
+        self.user_status, self.isAdmin = await self.__client.admincheck(self)
         self.mentioned = await self.get_valid_user_ids(self.message)
         if self.reply_to_message:
             reply_user = self.reply_to_message.from_user

@@ -12,7 +12,7 @@ class Command(BaseCommand):
             handler,
             {
                 "command": "weather",
-                "category": "core",
+                "category": "general",
                 "xp": True,
                 "AdminOnly": False,
                 "OwnerOnly": False,

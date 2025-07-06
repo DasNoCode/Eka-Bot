@@ -9,7 +9,7 @@ class Command(BaseCommand):
             handler,
             {
                 "command": "user_leaderboard",
-                "category": "core",
+                "category": "general",
                 "xp": False,
                 "AdminOnly": False,
                 "OwnerOnly": False,

@@ -15,7 +15,7 @@ class Command(BaseCommand):
             handler,
             {
                 "command": "shazamio",
-                "category": "media",
+                "category": "general",
                 "xp": True,
                 "AdminOnly": False,
                 "OwnerOnly": False,

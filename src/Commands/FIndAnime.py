@@ -16,7 +16,7 @@ class Command(BaseCommand):
             handler,
             {
                 "command": "whatanime",
-                "category": "anime",
+                "category": "general",
                 "xp": True,
                 "AdminOnly": False,
                 "OwnerOnly": False,

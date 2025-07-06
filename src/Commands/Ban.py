@@ -10,7 +10,7 @@ class Command(BaseCommand):
             handler,
             {
                 "command": "ban",
-                "category": "chat",
+                "category": "owner",
                 "xp": False,
                 "AdminOnly": False,
                 "OwnerOnly": True,

@@ -14,7 +14,7 @@ class Command(BaseCommand):
             handler,
             {
                 "command": "stats",
-                "category": "utility",
+                "category": "owner",
                 "xp": False,
                 "AdminOnly": False,
                 "OwnerOnly": True,
