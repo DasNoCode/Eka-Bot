@@ -14,50 +14,51 @@ class Command(BaseCommand):
                 "xp": False,
                 "AdminOnly": False,
                 "OwnerOnly": True,
-                "ChatOnly" : False,
-                "description": {"content": "Ban user from using the bot"},
+                "ChatOnly": False,
+                "description": {
+                    "content": "Ban a user from using the bot. Can be used with an optional reason and ban duration.",
+                    "usage": "/ban @username [reason] [time=duration]\n\nExamples:\n/ban @toxic_user Being annoying time=3days\nReply to a user's message with /ban to ban them directly."
+                },
             },
         )
 
-    async def exec(self, M: Message, context):
-
-        if M.reply_to_message:
-            user_name = M.reply_to_message.replied_user.user_name
-            user_id = M.reply_to_message.replied_user.user_id
-        elif M.mentioned:
-            usermentioned_user = M.mentioned[0]
-            user_name = usermentioned_user.user_name
-            user_id = usermentioned_user.user_id
+    async def exec(self, message: Message, context):
+        if message.reply_to_message:
+            target_username = message.reply_to_message.replied_user.user_name
+            target_user_id = message.reply_to_message.replied_user.user_id
+        elif message.mentioned:
+            mentioned_user = message.mentioned[0]
+            target_username = mentioned_user.user_name
+            target_user_id = mentioned_user.user_id
         else:
             return await self.client.send_message(
-                M.chat_id, f"@{M.sender.user_name} mention or replay to an user to ban!"
+                message.chat_id, f"@{message.sender.user_name}, please mention or reply to a user to ban them!"
             )
 
-        if user_id == self.client.bot_id:
+        if target_user_id == self.client.bot_id:
             return await self.client.send_message(
-                M.chat_id, f"@{M.sender.user_name} oh no! you can't ban me!"
+                message.chat_id, f"@{message.sender.user_name}, you can't ban me!"
             )
 
-        user_data = self.client.db.User.get_user(user_id=user_id).get("ban")
-        if user_data.get("is_ban"):
+        ban_data = self.client.db.User.get_user(user_id=target_user_id).get("ban")
+        if ban_data.get("is_ban"):
             return await self.client.send_message(
-                M.chat_id, f"@{M.sender.user_name} this user is already **banned!**"
+                message.chat_id, f"@{message.sender.user_name}, this user is already **banned!**"
             )
 
         if context[2]:
-            text = context[2].get("reason", "") or ""
-            raw_time = context[2].get("time", "")
-            search_text = f"{text} {raw_time}"
+            reason_text = context[2].get("reason", "") or ""
+            raw_time_text = context[2].get("time", "")
+            combined_text = f"{reason_text} {raw_time_text}"
         else:
-            text = context[1]
-            for word in ["/ban", f"@{user_name}"]:
-                text = text.replace(word, "")
-            search_text = text
+            combined_text = context[1]
+            for word in ["/ban", f"@{target_username}"]:
+                combined_text = combined_text.replace(word, "")
+        
         time_pattern = re.compile(
             r"(?:time\s*=\s*)?(?P<num>\d+)?\s*(?P<unit>seconds?|minutes?|hours?|days?|weeks?|months?|years?)\b",
             re.IGNORECASE,
         )
-
         seconds_map = {
             "second": 1,
             "minute": 60,
@@ -68,41 +69,38 @@ class Command(BaseCommand):
             "year": 31536000,
         }
 
-        time = None
-        match = time_pattern.search(search_text)
+        ban_duration = None
+        match = time_pattern.search(combined_text)
         if match:
             num = int(match.group("num")) if match.group("num") else 1
             unit = match.group("unit").rstrip("s").lower()
-            time = num * seconds_map[unit]
-            text = time_pattern.sub("", search_text)
+            ban_duration = num * seconds_map[unit]
+            combined_text = time_pattern.sub("", combined_text)
 
-        text = re.sub(r"\btime\b", "", text, flags=re.IGNORECASE)
-        text = " ".join(text.split())
+        reason_cleaned = re.sub(r"\btime\b", "", combined_text, flags=re.IGNORECASE)
+        reason_cleaned = " ".join(reason_cleaned.split())
 
-        user_data = self.client.db.User.get_user(user_id=user_id).get("ban")
         self.client.db.User.update_user(
-            user_id,
+            target_user_id,
             {
                 "ban": {
-                    "no_of": user_data.get("no_of") + 1,
+                    "no_of": ban_data.get("no_of", 0) + 1,
                     "is_ban": True,
-                    "reason": text,
-                    "time": time,
+                    "reason": reason_cleaned,
+                    "time": ban_duration,
                 }
             },
         )
-        user_data = self.client.db.User.get_user(user_id=user_id).get("ban")
-        status = "\n".join(
-            [
-                "🚫 **Ban Status:** Banned",
-                f"   **• Reason:** {user_data.get('reason', '')}",
-                f"   **• Since:** {user_data['time']} UTC"
-                if user_data.get("time")
-                else "   **• Since:**",
-                f"   **• Total Bans:** {user_data.get('no_of', 1)}",
-            ]
-        )
+
+        updated_ban_data = self.client.db.User.get_user(user_id=target_user_id).get("ban")
+        ban_status = "\n".join([
+            "🚫 **Ban Status:** Banned",
+            f"   **• Reason:** {updated_ban_data.get('reason', '')}",
+            f"   **• Since:** {updated_ban_data['time']} UTC" if updated_ban_data.get("time") else "   **• Since:**",
+            f"   **• Total Bans:** {updated_ban_data.get('no_of', 1)}",
+        ])
+
         await self.client.send_message(
-            M.chat_id,
-            f"Successfully **banned** @{user_name} from using @{M.bot_username}\n\n{status}",
+            message.chat_id,
+            f"Successfully **banned** @{target_username} from using @{message.bot_username}\n\n{ban_status}",
         )

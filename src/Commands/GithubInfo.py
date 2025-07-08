@@ -5,7 +5,6 @@ from Structures.Message import Message
 
 
 class Command(BaseCommand):
-
     def __init__(self, client, handler):
         super().__init__(
             client,
@@ -16,63 +15,61 @@ class Command(BaseCommand):
                 "xp": True,
                 "AdminOnly": False,
                 "OwnerOnly": False,
-                "ChatOnly" : False,
-                "description": {"content": "Get GitHub user information"},
+                "ChatOnly": False,
+                "description": {
+                    "content": "Fetch GitHub user profile and repositories.",
+                    "usage": "/git username — returns GitHub bio, creation date, company, and top repos."
+                },
             },
         )
 
-    async def exec(self, M: Message, context):
-        if len(M.message.split()) == 1:
-            await self.client.send_message(M.chat_id, "Usage: `git (username)`")
-            return
+    async def exec(self, message: Message, context):
+        if len(message.message.split()) == 1:
+            return await self.client.send_message(
+                message.chat_id, "❌ Usage: `/git username`"
+            )
 
-        username = M.message.split(None, 1)[1]
-        URL = f"https://api.github.com/users/{username}"
+        username = message.message.split(None, 1)[1]
+        user_url = f"https://api.github.com/users/{username}"
 
         async with aiohttp.ClientSession() as session:
-            async with session.get(URL) as request:
-                if request.status == 404:
+            async with session.get(user_url) as user_response:
+                if user_response.status == 404:
                     return await self.client.send_message(
-                        M.chat_id, f"`{M.sender.user_name} not found`"
+                        message.chat_id,
+                        f"❌ GitHub user `{username}` not found.",
                     )
 
-                result = await request.json()
+                user_data = await user_response.json()
 
-                url = result.get("html_url", None)
-                name = result.get("name", None)
-                company = result.get("company", None)
-                bio = result.get("bio", None)
-                created_at = result.get("created_at", "Not Found")
-                MAX_REPOS_DISPLAY = 5
-                MAX_MESSAGE_LENGTH = 4096
+                html_url = user_data.get("html_url", "N/A")
+                name = user_data.get("name", "N/A")
+                company = user_data.get("company", "N/A")
+                bio = user_data.get("bio", "N/A")
+                created_at = user_data.get("created_at", "N/A")
+                repos_url = user_data.get("repos_url")
 
-                REPLY = (
-                    "🧑‍💻 **GitHub Info**\n\n"
-                    f"**Username:** `{username}`\n\n"
-                    f"**Bio:** {bio}\n\n"
-                    f"**URL:** {url}\n\n"
-                    f"**Company:** {company}\n"
-                    f"**Created at:** {created_at}\n"
+                response_text = (
+                    "🧑‍💻  **GitHub User Info**\n\n"
+                    f"**Username:** `{username}`\n"
+                    f"**Name:** {name or 'N/A'}\n"
+                    f"**Bio:** {bio or 'N/A'}\n"
+                    f"**Company:** {company or 'N/A'}\n"
+                    f"**Created:** {created_at}\n"
+                    f"🔗 **URL**: [Profile Link]({html_url})\n\n"
                 )
 
-                if not result.get("repos_url"):
-                    return await self.client.send_message(M.chat_id, REPLY)
+                if repos_url:
+                    async with session.get(repos_url) as repo_response:
+                        if repo_response.status != 200:
+                            return await self.client.send_message(message.chat_id, response_text)
 
-                async with session.get(result["repos_url"]) as request:
-                    if request.status == 404:
-                        return await self.client.send_message(M.chat_id, REPLY)
+                        repos = await repo_response.json()
+                        if repos:
+                            response_text += "📦 **Top Repositories:**\n"
+                            for idx, repo in enumerate(repos[:5], start=1):
+                                repo_name = repo.get("name")
+                                repo_link = repo.get("html_url")
+                                response_text += f"[{idx}. {repo_name}]({repo_link})\n"
 
-                    repos = await request.json()
-                    if repos:
-                        REPLY += "• **Repos** :\n"
-                        for repo in repos[:MAX_REPOS_DISPLAY]:
-                            repo_info = (
-                                f"[{repo.get('name')}]({repo.get('html_url')})\n"
-                            )
-                            if len(REPLY) + len(repo_info) > MAX_MESSAGE_LENGTH:
-                                await self.client.send_message(M.chat_id, REPLY)
-                                REPLY = ""
-                            REPLY += repo_info
-
-                    if REPLY:
-                        await self.client.send_message(M.chat_id, REPLY)
+                await self.client.send_message(message.chat_id, response_text, disable_web_page_preview=True)

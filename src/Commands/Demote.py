@@ -16,29 +16,29 @@ class Command(BaseCommand):
                 "xp": False,
                 "AdminOnly": True,
                 "OwnerOnly": False,
-                "ChatOnly" : True,
-                "description": {"content": "demote the user to Admin of chat"},
+                "ChatOnly": True,
+                "description": {
+                    "content": "Demotes a user from admin to regular member in the chat.",
+                    "usage": "/demote @username\nor\nReply to the user’s message with /demote"
+                },
             },
         )
 
-    async def exec(self, M: Message, contex):
+    async def exec(self, message: Message, context):
 
-        if M.reply_to_message:
-            user_name = M.sender.user_name
-            user_id = M.sender.user_id
-        elif M.mentioned:
-            usermentioned_user = M.mentioned[0]
-            user_name = usermentioned_user.user_name
-            user_id = usermentioned_user.user_id
+        if message.reply_to_message:
+            target_user = message.reply_to_message.replied_user
+        elif message.mentioned:
+            target_user = message.mentioned[0]
         else:
             return await self.client.send_message(
-                M.chat_id,
-                f"@{M.sender.user_name} reply to a user or mention a user to **demote** the user!"
+                message.chat_id,
+                f"@{message.sender.user_name}, please reply to or mention a user to **demote**.",
             )
-        
+
         await self.client.promote_chat_member(
-            M.chat_id,
-            user_id,
+            message.chat_id,
+            target_user.user_id,
             ChatPrivileges(
                 can_change_info=False,
                 can_invite_users=False,
@@ -49,7 +49,8 @@ class Command(BaseCommand):
                 is_anonymous=False,
             ),
         )
+
         await self.client.send_message(
-            M.chat_id,
-            f"Successfully demoted @{user_name} to user in {M.chat_title}",
+            message.chat_id,
+            f"Successfully **demoted** @{target_user.user_name} to a regular member in **{message.chat_title}**.",
         )

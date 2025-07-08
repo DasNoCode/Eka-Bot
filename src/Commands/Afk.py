@@ -16,24 +16,28 @@ class Command(BaseCommand):
                 "xp": False,
                 "AdminOnly": False,
                 "OwnerOnly": False,
-                "ChatOnly" : True,
+                "ChatOnly": True,
                 "description": {
-                    "content": "Set yourself as AFK. Mentions will auto-reply that you're unavailable and notify you when you're mentioned."
+                    "content": "Mark yourself as AFK (Away From Keyboard). Other users will be notified when they mention you.",
+                    "usage": "/afk [reason]\n\nExamples:\n/afk\n/afk Out for lunch"
                 },
             },
         )
 
-    async def exec(self, M: Message, context):
+    async def exec(self, message: Message, context):
         current_time = datetime.now().time().strftime("%H:%M:%S")
-        user = self.client.db.User.get_user(M.sender.user_id)
+        user_data = self.client.db.User.get_user(message.sender.user_id)
 
-        if user["afk"]["is_afk"]:
+        if user_data["afk"]["is_afk"]:
             return await self.client.send_message(
-                M.chat_id, f"@{M.sender.user_name} you are already in afk"
+                message.chat_id, f"@{message.sender.user_name}, you are already marked as AFK."
             )
+
+        afk_reason = context[1] if context[1] else None
         self.client.db.User.set_afk(
-            M.sender.user_id, True, context[1] if context[1] else None, current_time
+            message.sender.user_id, True, afk_reason, current_time
         )
+
         await self.client.send_message(
-            M.chat_id, f"@{M.sender.user_name} you are afk now!"
+            message.chat_id, f"@{message.sender.user_name} is now marked as AFK!"
         )

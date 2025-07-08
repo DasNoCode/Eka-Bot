@@ -20,8 +20,11 @@ class Command(BaseCommand):
                 "xp": True,
                 "AdminOnly": False,
                 "OwnerOnly": False,
-                "ChatOnly" : False,
-                "description": {"content": "Convert text to voice"},
+                "ChatOnly": False,
+                "description": {
+                    "content": "Convert text into voice using Google TTS.",
+                    "usage": "`/tts <language_code> <text>`\nReply to a message or provide text directly."
+                },
             },
         )
 

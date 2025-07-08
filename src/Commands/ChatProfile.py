@@ -14,67 +14,61 @@ class Command(BaseCommand):
                 "xp": False,
                 "AdminOnly": False,
                 "OwnerOnly": False,
-                "ChatOnly" : True,
-                "description": {"content": "Show the profile and stats of this chat."},
+                "ChatOnly": True,
+                "description": {
+                    "content": "Displays the full profile and stats of the current chat.",
+                    "usage": "/chatprofile\n\nShows chat title, XP, bot status, settings, message stats, and moderation data."
+                }
             }
         )
 
-    async def exec(self, M: Message, context):
-        chatTitle = M.chat_title
-        chatId = M.chat_id
-        
-        profilePhotoId = getattr(M.chat_info.photo, "big_file_id", None)
-        imageFileName = f"Images/{chatId}.jpg"
-        photoPath = None
-        
-        if profilePhotoId:
-            await self.client.download_media(
-                profilePhotoId,
-                file_name=imageFileName
-            )
-            photoPath = f"src/{imageFileName}"
+    async def exec(self, message: Message, context):
+        chat_title = message.chat_title
+        chat_id = message.chat_id
 
-        chatData = self.client.db.Chat.get_chat_data(chatId)
-        if not chatData:
-            await self.client.send_message(chatId, "No data found for this chat.")
-            return
-        
-        settings = chatData.get("settings", {})
-        stats = chatData.get("stats", {})
-        moderation = chatData.get("moderation", {})
-        
-        statusMessage = (
+        profile_photo_id = getattr(message.chat_info.photo, "big_file_id", None)
+        local_image_path = f"Images/{chat_id}.jpg"
+        full_image_path = None
+
+        if profile_photo_id:
+            await self.client.download_media(profile_photo_id, file_name=local_image_path)
+            full_image_path = f"src/{local_image_path}"
+
+        chat_data = self.client.db.Chat.get_chat_data(chat_id)
+        if not chat_data:
+            return await self.client.send_message(chat_id, "❌ No data found for this chat.")
+
+        settings = chat_data.get("settings", {})
+        stats = chat_data.get("stats", {})
+        moderation = chat_data.get("moderation", {})
+
+        profile_text = (
             "🏠 **Chat Profile**\n\n"
-            f"📝 **Title:** {chatTitle}\n"
-            f"🆔 **Chat ID:** `{chatId}`\n"
-            f"🎖️ **Level:** {chatData.get('lvl', 0)}\n"
-            f"📈 **XP:** {chatData.get('xp', 0)}\n"
-            f"🤖 **Bot Admin:** {'✅' if chatData.get('is_bot_admin') else '❌'}\n\n"
-            
+            f"📝 **Title:** {chat_title}\n"
+            f"🆔 **Chat ID:** `{chat_id}`\n"
+            f"🎖️ **Level:** {chat_data.get('lvl', 0)}\n"
+            f"📈 **XP:** {chat_data.get('xp', 0)}\n"
+            f"🤖 **Bot Admin:** {'✅' if chat_data.get('is_bot_admin') else '❌'}\n\n"
+
             f"⚙️ **Settings**\n"
             f"• 🌐 **Language:** {settings.get('language', 'en')}\n"
             f"• 🎉 **Events:** {'✅' if settings.get('events') else '❌'}\n"
             f"• 🔐 **Captchas:** {'✅' if settings.get('captchas') else '❌'}\n"
             f"• 👋 **Welcome:** {'✅' if settings.get('welcome_enabled') else '❌'}\n"
             f"• 💬 **Welcome Msg:** {settings.get('welcome_message', 'Not set')}\n\n"
-        
+
             f"📊 **Stats**\n"
             f"• 📨 **Messages:** {stats.get('messages_count', 0)}\n"
-            f"• 👥 **Active Users:** {len(stats.get('active_users', []))}\n\n"
-        
+            f"• 👥 **Active Users:** {len(stats.get('active_users', []) or [])}\n\n"
+
             f"🛡️ **Moderation**\n"
-            f"• 🚫 **Banned Users:** {len(moderation.get('banned_users', []))}\n"
-            f"• 🔇 **Muted Users:** {len(moderation.get('mute_list', []))}\n"
-            f"• 📢 **Broadcast:** {'✅' if chatData.get('BrodCast') else '❌'}"
+            f"• 🚫 **Banned Users:** {len(moderation.get('banned_users', []) or [])}\n"
+            f"• 🔇 **Muted Users:** {len(moderation.get('mute_list', []) or [])}\n"
+            f"• 📢 **Broadcast:** {'✅' if chat_data.get('BrodCast') else '❌'}"
         )
-        
-        if photoPath:
-            await self.client.send_photo(
-                chatId,
-                photo=photoPath,
-                caption=statusMessage
-            )
-            os.remove(photoPath)
+
+        if full_image_path:
+            await self.client.send_photo(chat_id, photo=full_image_path, caption=profile_text)
+            os.remove(full_image_path)
         else:
-            await self.client.send_message(chatId, statusMessage)
-        
+            await self.client.send_message(chat_id, profile_text)

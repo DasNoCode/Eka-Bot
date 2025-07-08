@@ -39,7 +39,6 @@ class EventHandler:
                     reply_markup=keybord,
                 )
                 EventHandler.msg_id = msg.id
-                print("msg_id:", EventHandler.msg_id)
                 
 
 
@@ -49,12 +48,12 @@ class EventHandler:
             if not chat_data.get("settings").get("captchas"):
                 await self.__client.send_message(
                     message.chat.id,
-                    f"__@{self.member.username} has joined the Chat!__",
+                    f"@{self.member.username} has joined the Chat!",
                 )
         elif str(message.service).split(".")[-1] == "LEFT_CHAT_MEMBERS":
             await self.__client.send_message(
                 message.chat.id,
-                f"__@{message.left_chat_member.username} has left the Chat!__",
+                f"@{message.left_chat_member.username} has left the Chat!",
             )
         elif str(message.service).split(".")[-1] == "PINNED_MESSAGE":
-            await self.__client.send_message(message.chat.id, f"__A new message has been pinned by @{message.from_user.username}./nCheck now !__",)
+            await self.__client.send_message(message.chat.id, f"A new message has been pinned by @{message.from_user.username}./nCheck now !",)

@@ -1,0 +1,9 @@
+.venv
+src/Commands/__pycache__
+src/Database/__pycache__
+src/Handler/__pycache__
+src/Helpers/__pycache__
+src/Structures/__pycache__
+src/Structures/Command/__pycache__
+src/Eka-Bot.session
+.env

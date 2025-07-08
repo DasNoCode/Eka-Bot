@@ -26,7 +26,8 @@ class Command(BaseCommand):
                 "OwnerOnly": False,
                 "ChatOnly" : False,
                 "description": {
-                    "content": "Play Rock-Paper-Scissors with the bot."
+                    "content": "Promote a user to admin in the chat.",
+                    "usage": "Play a classic Rock-Paper-Scissors game against the bot!"
                 },
             },
         )

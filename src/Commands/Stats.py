@@ -1,5 +1,4 @@
 from datetime import datetime
-
 import psutil
 
 from Structures.Command.BaseCommand import BaseCommand
@@ -18,18 +17,27 @@ class Command(BaseCommand):
                 "xp": False,
                 "AdminOnly": False,
                 "OwnerOnly": True,
-                "ChatOnly" : False,
-                "description": {"content": "Get the info about the server"},
+                "ChatOnly": False,
+                "description": {
+                    "content": "Display system/server resource usage details.",
+                    "usage": "Use `/stats` to check server CPU, memory, uptime, and current time/date."
+                },
             },
         )
 
-    async def exec(self, M: Message, contex):
-        cpu_usage = psutil.cpu_percent()
-        memory_info = psutil.virtual_memory()
-        memory_usage = memory_info.percent
-        now = datetime.now().time().strftime("%H:%M:%S")
-        date = datetime.now().strftime("%Y-%m-%d")
+    async def exec(self, M: Message, context):
+        cpu_percent = psutil.cpu_percent()
+        memory_percent = psutil.virtual_memory().percent
+        current_time = datetime.now().strftime("%H:%M:%S")
+        current_date = datetime.now().strftime("%Y-%m-%d")
+        uptime = self.client.utils.uptime()
+
         await self.client.send_message(
             M.chat_id,
-            f"💻  **Status**\n\n**Data:** {date}\n\n**Time:** {now}\n\n**Uptime:** {self.client.utils.uptime()}\n\n**CPU:** {cpu_usage}%\n\n**Memory:** {memory_usage}%",
+            f"💻 **Server Status**\n\n"
+            f"📅 **Date:** {current_date}\n"
+            f"⏰ **Time:** {current_time}\n"
+            f"⏳ **Uptime:** {uptime}\n"
+            f"🧠 **CPU Usage:** {cpu_percent}%\n"
+            f"💾 **Memory Usage:** {memory_percent}%"
         )

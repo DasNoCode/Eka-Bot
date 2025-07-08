@@ -14,23 +14,30 @@ class Command(BaseCommand):
                 "xp": False,
                 "AdminOnly": True,
                 "OwnerOnly": False,
-                "ChatOnly" : True,
-                "description": {"content": "Prevents bots by verifying new users with a captcha challenge."},
+                "ChatOnly": True,
+                "description": {
+                    "content": "Ban a user from the current chat. Admins only.",
+                    "usage": "/chatban @username\nor\nReply to a user's message with /chatban"
+                },
             },
         )
 
-    async def exec(self, M: Message, context):
+    async def exec(self, message: Message, context):
 
-        if M.reply_to_message:
-            user_name = M.M.reply_to_message.replied_user.user_name
-            user_id = M.M.reply_to_message.replied_user.user_id
-        elif M.mentioned:
-            usermentioned_user = M.mentioned[0]
-            user_name = usermentioned_user.user_name
-            user_id = usermentioned_user.user_id
+        if message.reply_to_message:
+            target_user = message.reply_to_message.replied_user
+        elif message.mentioned:
+            target_user = message.mentioned[0]
+        else:
+            return await self.client.send_message(
+                message.chat_id, f"@{message.sender.user_name}, please reply to or mention a user to ban."
+            )
 
-        await self.client.ban_chat_member(M.chat_id, user_id)
+        user_name = target_user.user_name
+        user_id = target_user.user_id
+
+        await self.client.ban_chat_member(message.chat_id, user_id)
         await self.client.send_message(
-            M.chat_id,
-            f"Successfully banned @{user_name} from {M.chat_title}",
+            message.chat_id,
+            f"Successfully **banned** @{user_name} from {message.chat_title}.",
         )

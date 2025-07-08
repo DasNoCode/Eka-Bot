@@ -5,7 +5,6 @@ from Structures.Message import Message
 
 
 class Command(BaseCommand):
-
     def __init__(self, client, handler):
         super().__init__(
             client,
@@ -16,11 +15,13 @@ class Command(BaseCommand):
                 "xp": False,
                 "AdminOnly": True,
                 "OwnerOnly": False,
-                "ChatOnly" : True,
-                "description": {"content": "Lock the chat"},
+                "ChatOnly": True,
+                "description": {
+                    "content": "Toggle chat lock — disables or restores message permissions.",
+                    "usage": "/lockchat — Lock or unlock the chat for everyone."
+                },
             },
         )
-
     async def exec(self, M: Message, contex):
 
         chat_id = M.chat_id
@@ -39,7 +40,7 @@ class Command(BaseCommand):
             )
             return await self.client.send_message(
                 M.chat_id,
-                f"__@{M.chat_title} have been muted by @{M.sender.user_name}.",
+                f"@{M.chat_title} have been muted by @{M.sender.user_name}.",
             )
         chatpermissions = self.client.db.Chat.get_all_chatpermissions()
         await self.client.set_chat_permissions(

@@ -40,7 +40,6 @@ class SuperClient(Client):
 
     async def admincheck(self, message):
         if message.chat_type in ["GROUP", "SUPERGROUP", "CHANNEL"]:
-            print(message)
             user = await self.get_chat_member(message.chat_id, message.sender.user_id)
             user_status = str(user.status)[len("ChatMemberStatus.") :].strip()
             user_permissions = user.privileges
@@ -93,7 +92,7 @@ class SuperClient(Client):
         xp = data["xp"]
         lvl = data["lvl"]
         if xp_gained is None:
-            xp_gained = random.randint(1, 3)
+            xp_gained = self.utils.get_random_int(1, 3)
         total_xp = data["xp"] + xp_gained
         last_lvl = lvl
         lvled_up = False

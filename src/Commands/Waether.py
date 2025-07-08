@@ -16,22 +16,37 @@ class Command(BaseCommand):
                 "xp": True,
                 "AdminOnly": False,
                 "OwnerOnly": False,
-                "ChatOnly" : False,
-                "description": {"content": "Get the current weather for a location"},
+                "ChatOnly": False,
+                "description": {
+                    "content": "Get the current weather for a location.",
+                    "usage": "`/weather <location>` — Shows weather info for the given location."
+                },
             },
         )
 
-    async def exec(self, M: Message, contex):
-
-        if len(M.message) < 2:
-            await self.client.send_message(
-                M.chat_id, f"Send **/weather location** to get weather info ℹ️."
+    async def exec(self, M: Message, context):
+        if not context[3]:
+            return await self.client.send_message(
+                M.chat_id, "/weather your location"
             )
-            return
+
+        location = " ".join(M.message[1:])
+
         try:
-            location = " ".join(M.message[1:])
-            response = requests.get(f"https://wttr.in/{location}?mnTC0&lang=en")
-            await self.client.send_message(M.chat_id, response.text)
-        except Exception as e:
-            self.__client.log.error(str(e))
-            await self.client.send_message(M.chat_id, f"__Error:__ {e}")
+            response = requests.get(f"https://wttr.in/{location}?format=j1")
+            data = response.json()
+            
+            current = data['current_condition'][0]
+            weather_report = (
+                f"🌤️  **{location.title()}**\n"
+                f"🌡️ **Temperature:** {current['temp_C']}°C (Feels like {current['FeelsLikeC']}°C)\n"
+                f"🌫️ **Condition:** {current['weatherDesc'][0]['value']}\n"
+                f"💨 **Wind:** {current['windspeedKmph']} km/h {current['winddir16Point']}\n"
+                f"💧 **Humidity:** {current['humidity']}%\n"
+                f"🌧️ **Precipitation:** {current['precipMM']} mm"
+            )
+            
+            await self.client.send_message(M.chat_id, weather_report)
+        except Exception as error:
+            self.client.log.error(str(error))
+            await self.client.send_message(M.chat_id, f"**Error occurred:** {error}")

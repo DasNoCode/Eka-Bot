@@ -13,8 +13,11 @@ class Command(BaseCommand):
                 "xp": False,
                 "AdminOnly": True,
                 "OwnerOnly": False,
-                "ChatOnly" : True,
-                "description": {"content": "List all muted users in the chat"},
+                "ChatOnly": True,
+                "description": {
+                    "content": "List all currently muted users in this chat.",
+                    "usage": "/mutedlist — Shows the list of muted users."
+                },
             },
         )
 

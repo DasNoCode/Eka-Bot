@@ -14,11 +14,16 @@ class Command(BaseCommand):
                 "xp": False,
                 "AdminOnly": False,
                 "OwnerOnly": False,
-                "ChatOnly" : True,
-                "description": {"content": "Give id of the chat"},
+                "ChatOnly": True,
                 "exp": 1,
+                "description": {
+                    "content": "Returns the unique ID of the current chat.",
+                    "usage": "/chatid\n\nShows the Telegram chat ID where the command is used."
+                },
             },
         )
 
-    async def exec(self, M: Message, context):
-        await self.client.send_message(M.chat_id, f"__chat-id__: `{M.chat_id}`")
+    async def exec(self, message: Message, context):
+        await self.client.send_message(
+            message.chat_id, f"**Chat ID:** `{message.chat_id}`"
+        )

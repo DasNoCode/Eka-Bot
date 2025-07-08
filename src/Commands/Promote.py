@@ -16,8 +16,11 @@ class Command(BaseCommand):
                 "xp": False,
                 "AdminOnly": True,
                 "OwnerOnly": False,
-                "ChatOnly" : True,
-                "description": {"content": "Promote the user to Admin of chat"},
+                "ChatOnly": True,
+                "description": {
+                    "content": "Promote a user to admin in the chat.",
+                    "usage": "promote [mention or reply]\nUse this command by replying to a user or mentioning them to promote them to admin."
+                },
             },
         )
 

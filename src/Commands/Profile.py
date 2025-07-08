@@ -1,5 +1,4 @@
 import os
-
 from Structures.Command.BaseCommand import BaseCommand
 from Structures.Message import Message
 
@@ -14,8 +13,11 @@ class Command(BaseCommand):
                 "xp": False,
                 "AdminOnly": False,
                 "OwnerOnly": False,
-                "ChatOnly" : False,
-                "description": {"content": "Send the profile picture of the user."},
+                "ChatOnly": False,
+                "description": {
+                    "content": "View a user's profile and stats.",
+                    "usage": "/profile [mention or reply] — Shows the user's detailed profile."
+                },
             }
         )
     

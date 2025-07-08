@@ -16,22 +16,27 @@ class Command(BaseCommand):
                 "xp": False,
                 "AdminOnly": True,
                 "OwnerOnly": False,
-                "ChatOnly" : True,
-                "description": {"content": "Unmute a user in the chat"},
+                "ChatOnly": True,
+                "description": {
+                    "content": "Unmute a previously muted user in the chat.",
+                    "usage": "/unmute by replying to a user or mentioning them."
+                },
             },
         )
 
     async def exec(self, M: Message, context):
-
         if M.reply_to_message:
-            user_name = M.reply_to_message.replied_user.user_name
-            user_id = M.reply_to_message.replied_user.user_id
+            target_user = M.reply_to_message.replied_user
         elif M.mentioned:
-            usermentioned_user = M.mentioned[0]
-            user_name = usermentioned_user.user_name
-            user_id = usermentioned_user.user_id
+            target_user = M.mentioned[0]
         else:
-            return await self.client.send_message(M.chat_id, f"@{M.sender.user_name} reply to a user or mention a user to **unmute** the user!")
+            return await self.client.send_message(
+                M.chat_id,
+                f"@{M.sender.user_name}, reply to a user or mention a user to **unmute** them!"
+            )
+
+        user_id = target_user.user_id
+        user_name = target_user.user_name
 
         permissions = ChatPermissions(
             can_send_messages=True,
@@ -43,8 +48,10 @@ class Command(BaseCommand):
             can_pin_messages=True,
             can_change_info=True
         )
+
         chat_data = self.client.db.Chat.get_chat_data(M.chat_id)
         mute_list = chat_data.get("moderation", {}).get("mute_list", [])
+
         if user_id in mute_list:
             mute_list.remove(user_id)
             self.client.db.Chat.update_chat_datas(
@@ -52,11 +59,12 @@ class Command(BaseCommand):
             )
             await self.client.send_message(
                 M.chat_id,
-                f"Successfully **unmuted** @{user_name} in {M.chat_title}",
+                f"Successfully **unmuted** @{user_name} in {M.chat_title}."
             )
         else:
             await self.client.send_message(
                 M.chat_id,
-                f"@{user_name} is not muted in {M.chat_title}",
+                f"@{user_name} is not muted in {M.chat_title}."
             )
+
         await self.client.restrict_chat_member(M.chat_id, user_id, permissions)

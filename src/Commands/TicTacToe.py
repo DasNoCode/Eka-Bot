@@ -18,8 +18,10 @@ class Command(BaseCommand):
                 "AdminOnly": False,
                 "OwnerOnly": False,
                 "ChatOnly" : False,
-                "description": {"content": "Play Tic-Tac-Toe with the bot"},
-            }
+                "description": {
+                    "content": "Promote a user to admin in the chat.",
+                    "usage": "Play a classic Tic Tac Toe game against the bot!"
+                }}
         )
         self.userId = None
         self.userPoints = 0

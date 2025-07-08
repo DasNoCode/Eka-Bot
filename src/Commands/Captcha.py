@@ -62,7 +62,7 @@ class Command(BaseCommand):
 
                 await self.client.send_message(
                     message.chat_id,
-                    f"@{message.sender.user_name}, __Enjoy your stay here! And use /help to get all the bot commands.__"
+                    f"@{message.sender.user_name}, Enjoy your stay here! And use /help to get all the bot commands"
                 )
             else:
                 await self.client.ban_chat_member(
@@ -98,7 +98,7 @@ class Command(BaseCommand):
         captchaPromptMessage = await self.client.send_photo(
             message.chat_id,
             imagePath,
-            caption="__Here is your Captcha! Solve it within 1 minute.__",
+            caption="Here is your **Captcha**! Solve it within 1 minute.",
             reply_markup=InlineKeyboardMarkup(
                 [
                     [

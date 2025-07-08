@@ -1,5 +1,4 @@
 import os
-
 import tracemoepy
 
 from Structures.Command.BaseCommand import BaseCommand
@@ -20,55 +19,58 @@ class Command(BaseCommand):
                 "xp": True,
                 "AdminOnly": False,
                 "OwnerOnly": False,
-                "ChatOnly" : False,
-                "description": {"content": "Identify the anime from a provided image."},
+                "ChatOnly": False,
+                "description": {
+                    "content": "Identify the anime from an image, GIF, or video clip.",
+                    "usage": "Reply to a photo, gif, or video with `/whatanime` to search for the anime scene."
+                },
             },
         )
         self.tracemoe = tracemoepy.tracemoe.TraceMoe()
 
-    async def exec(self, M: Message, context):
-        if M.msg_type not in self.media_types:
+    async def exec(self, message: Message, context):
+        msg_type = message.msg_type
+        sender_name = message.sender.user_name
+
+        if msg_type not in self.media_types:
             return await self.client.send_message(
-                M.chat_id,
-                f"@{M.sender.user_name} Replied to a Gif, Image, or Video",
+                message.chat_id,
+                f"@{sender_name}, please reply to a **photo**, **gif**, or **video** to identify the anime.",
             )
 
-        file_path = f"downloads/{M.file_id}.{self.media_types[M.msg_type]}"
-        await self.client.download_media(M.file_id, file_name=file_path)
+        file_ext = self.media_types[msg_type]
+        file_path = f"Images/{message.file_id}.{file_ext}"
+        full_path = f"src/{file_path}"
+
+        await self.client.download_media(message.file_id, file_name=file_path)
 
         try:
-            info = self.tracemoe.search(f"src/{file_path}", upload_file=True)
+            result = self.tracemoe.search(full_path, upload_file=True)
 
-            if isinstance(info.result, list) and len(info.result) > 0:
-                first_result = info.result[0]
-                anilist = first_result.get("anilist", {})
-                if isinstance(anilist, dict):
-                    title = anilist.get("title", {})
-                    if isinstance(title, dict):
-                        is_adult = anilist.get("isAdult", "N/A")
-                        episode = first_result.get("episode", "N/A")
-                        native_title = title.get("native", "N/A")
-                        english_title = title.get("english", "N/A")
-                        similarity = first_result.get("similarity", "N/A")
-                    else:
-                        native_title = english_title = "N/A"
-                        similarity = episode = is_adult = "N/A"
-                else:
-                    native_title = english_title = "N/A"
-                    similarity = episode = is_adult = "N/A"
+            if isinstance(result.result, list) and result.result:
+                top_result = result.result[0]
+                anilist = top_result.get("anilist", {})
+                titles = anilist.get("title", {})
+                native_title = titles.get("native", "N/A")
+                english_title = titles.get("english", "N/A")
+                is_adult = anilist.get("isAdult", "N/A")
+                episode = top_result.get("episode", "N/A")
+                similarity = top_result.get("similarity", 0.0)
 
                 await self.client.send_message(
-                    M.chat_id,
-                    f"• __Native_title__ - `{native_title}` \n"
-                    f"• __English_title__ - `{english_title}` \n"
-                    f"• __Similarity__ - {similarity * 100:.2f}% \n"
-                    f"• __Episode__ - {episode} \n"
-                    f"• __Is_adult__ - {is_adult}",
+                    message.chat_id,
+                    f"🎬  **Anime Identified**\n\n"
+                    f"**Native Title:** `{native_title}`\n"
+                    f"**English Title:** `{english_title}`\n"
+                    f"**Episode:** `{episode}`\n"
+                    f"**Adult Content:** {'Yes 🔞' if is_adult else 'No'}\n"
+                    f"**Similarity:** `{similarity * 100:.2f}%`"
                 )
             else:
-                await self.client.send_message(M.chat_id, "__No results found.__")
-
+                await self.client.send_message(message.chat_id, "❌ No matching anime found.")
         except Exception as e:
-            self.__client.log.error(str(e))
-
-        os.remove(f"src/{file_path}")
+            self.client.log.error(f"TraceMoe error: {e}")
+            await self.client.send_message(message.chat_id, "⚠️ Something went wrong while identifying the anime.")
+        finally:
+            if os.path.exists(full_path):
+                os.remove(full_path)

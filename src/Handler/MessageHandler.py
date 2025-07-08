@@ -37,14 +37,6 @@ class MessageHandler:
         commandObj = self.commandMap.get(commandName)
         userData = self.__client.db.User.get_user(M.sender.user_id)
         
-        if not commandObj:
-            return await self.__client.send_message(
-                M.chat_id,
-                "__Command does not available!!__"
-            )
-        
-        if commandObj.config.ChatOnly and M.chat_type not in ["GROUP", "SUPERGROUP", "CHANNEL"]:
-            return await self.__client.send_message(M.chat_id, f"__@{M.sender.user_name} this command can't be used in PRIVATE chat!__")
 
         if M.message.split()[0] != "/afk":
             if userData["afk"]["is_afk"]:
@@ -52,27 +44,28 @@ class MessageHandler:
                 self.__client.db.User.set_afk(M.sender.user_id, False, None, currentTime)
                 await self.__client.send_message(
                     M.chat_id,
-                    f"__@{M.sender.user_name} nice to see you again!__"
+                    f"@{M.sender.user_name} nice to see you again!"
                 )
 
         if mentionedAFK["is_afk"] and repliedAFK["is_afk"]:
             return await self.__client.send_message(
                 M.chat_id,
-                f"__@{M.sender.user_name} @{mentionedUser.user_name} is currently offline.\n"
-                f"**Reason** : {mentionedAFK.get('afk_reason', 'None')}__"
+                f"@{M.sender.user_name} @{mentionedUser.user_name} is currently offline.\n"
+                f"**Reason** : {mentionedAFK.get('afk_reason', 'None')}"
             )
         elif mentionedAFK["is_afk"]:
             await self.__client.send_message(
                 M.chat_id,
-                f"__@{M.sender.user_name} @{mentionedUser.user_name} is currently offline.\n"
-                f"**Reason** : {mentionedAFK.get('afk_reason', 'None')}__"
+                f"@{M.sender.user_name} @{mentionedUser.user_name} is currently offline.\n"
+                f"**Reason** : {mentionedAFK.get('afk_reason', 'None')}"
             )
         elif repliedAFK["is_afk"]:
             await self.__client.send_message(
                 M.chat_id,
-                f"__@{M.sender.user_name} @{repliedUser.user_name} is currently offline.\n"
-                f"**Reason** : {repliedAFK.get('afk_reason', 'None')}__"
+                f"@{M.sender.user_name} @{repliedUser.user_name} is currently offline.\n"
+                f"**Reason** : {repliedAFK.get('afk_reason', 'None')}"
             )
+
 
         # === Message Logging if Not Command ===
         if not isCommand:
@@ -82,14 +75,20 @@ class MessageHandler:
             )
             return
         # === Command Parsing and Execution ===
+        if not commandObj:
+            return await self.__client.send_message(
+                M.chat_id,
+                "Command does not available!!"
+            )
+        
+        if commandObj.config.ChatOnly and M.chat_type not in ["GROUP", "SUPERGROUP", "CHANNEL"]:
+            return await self.__client.send_message(M.chat_id, f"@{M.sender.user_name} this command can't be used in PRIVATE chat!")
+        
         if messageText == self.__client.prifix:
             return await self.__client.send_message(
                 M.chat_id,
-                f"__Enter a command following {self.__client.prifix}__"
+                f"Enter a command following {self.__client.prifix}"
             )
-
-
-
 
         if commandObj.config.xp:
             try:
@@ -101,13 +100,13 @@ class MessageHandler:
         if commandObj.config.OwnerOnly and M.sender.user_id != self.__client.owner_id:
             return await self.__client.send_message(
                 M.chat_id,
-                "__This command can only be used by the **BOT owner**!!__"
+                "This command can only be used by the **BOT owner**!!"
             )
 
         if commandObj.config.AdminOnly and M.isAdmin is False:
             return await self.__client.send_message(
                 M.chat_id,
-                "__This command can only be used by an admin!!__"
+                "This command can only be used by an admin!!"
             )
 
         self.__client.log.info(
