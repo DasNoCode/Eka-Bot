@@ -2,9 +2,6 @@ from io import BytesIO
 import os
 from pyrogram import enums
 from pyromod import Client
-import random
-
-import requests
 from Helpers.Logger import get_logger
 from Helpers.Utils import Utils
 from Structures.Database import Database as db
@@ -121,6 +118,7 @@ class SuperClient(Client):
             name = message.chat_title
 
         if lvled_up:
+            print("working")
             if entity_type == "USER":
                 profile_photo = message.sender.user_profile_id
                 self.db.User.lvl_garined(message.sender.user_id, xp, last_lvl, lvl)
@@ -148,11 +146,11 @@ class SuperClient(Client):
                 f"&isboosting=false"
                 f"&circleavatar=true"
             )
-            response = requests.get(rankcard_url)
-            image_bytes = BytesIO(response.content)
+            image_bytes = self.utils.fetch_buffer(rankcard_url)
+            print(image_bytes)
             await self.send_photo(
                 message.chat_id,
-                image_bytes,
+                BytesIO(image_bytes),
                 caption=f"@{name} leveled up to level **{lvl}** **#{rank}**!"
             )
             

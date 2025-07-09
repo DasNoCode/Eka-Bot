@@ -24,7 +24,6 @@ class Command(BaseCommand):
     async def exec(self, M: Message, contex):
         if M.reply_to_message:
             try:
-                print(M.reply_to_message.text)
                 url = self.client.utils.get_urls(M.reply_to_message.text)
                 data = IGDownloader(url)
                 return await self.client.send_video(M.chat_id, data[0]["download_link"])

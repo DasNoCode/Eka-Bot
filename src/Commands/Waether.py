@@ -1,5 +1,3 @@
-import requests
-
 from Structures.Command.BaseCommand import BaseCommand
 from Structures.Message import Message
 
@@ -33,10 +31,9 @@ class Command(BaseCommand):
         location = " ".join(M.message[1:])
 
         try:
-            response = requests.get(f"https://wttr.in/{location}?format=j1")
-            data = response.json()
-            
-            current = data['current_condition'][0]
+            response = self.client.utils.fetch(f"https://wttr.in/{location}?format=j1")
+
+            current = response['current_condition'][0]
             weather_report = (
                 f"🌤️  **{location.title()}**\n"
                 f"🌡️ **Temperature:** {current['temp_C']}°C (Feels like {current['FeelsLikeC']}°C)\n"

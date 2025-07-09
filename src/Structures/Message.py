@@ -16,7 +16,6 @@ class Message:
 
         if self.is_callback:
             self.__m = message_or_callback.message
-            self.message_id = self.__m.id
             self.message = message_or_callback.data if message_or_callback.data else None
             self.query_id = message_or_callback.id
             self.sender = JsonObject(
@@ -39,6 +38,7 @@ class Message:
                     ),
                 }
             )
+        self.message_id = self.__m.id
         self.chat_info = self.__m.chat
         self.chat_title = self.chat_info.title
         self.chat_photo = self.chat_info.photo.big_file_id

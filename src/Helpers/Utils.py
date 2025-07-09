@@ -10,8 +10,7 @@ import requests
 from bs4 import BeautifulSoup
 from moviepy.video.io.VideoFileClip import VideoFileClip
 from decouple import config
-import subprocess
-from pathlib import Path
+
 
 
 class Utils:
@@ -43,49 +42,6 @@ class Utils:
                 results.append(os.path.join(root, file))
 
         return results
-    
-    @staticmethod
-    def convert_to_webp(input_path):
-        input_path = Path(input_path)
-        output_path = input_path.with_suffix(".webp")
-    
-        if not input_path.exists():
-            print("❌ File not found.")
-            return
-
-        if input_path.suffix.lower() == ".gif":
-            command = [
-                "ffmpeg",
-                "-i", str(input_path),
-                "-vcodec", "libwebp",
-                "-filter:v", "fps=15",  
-                "-lossless", "0",
-                "-compression_level", "6",
-                "-q:v", "80",
-                "-loop", "0",
-                str(output_path)
-            ]
-
-        elif input_path.suffix.lower() in [".jpg", ".jpeg", ".png"]:
-            command = [
-                "ffmpeg",
-                "-i", str(input_path),
-                "-vcodec", "libwebp",
-                "-lossless", "0",
-                "-compression_level", "6",
-                "-q:v", "80",
-                str(output_path)
-            ]
-        
-        else:
-            print("❌ Unsupported file format.")
-            return
-    
-        try:
-            subprocess.run(command, check=True)
-            print(f"✅ Converted: {output_path}")
-        except subprocess.CalledProcessError:
-            print("❌ ffmpeg failed to convert the file.")
 
     @staticmethod
     def buffer_to_base64(buffer):
@@ -115,8 +71,6 @@ class Utils:
 
     @staticmethod
     def extract_numbers(content):
-        if content is None:
-            return
         try:
             number_pattern = re.compile(r"\b\d+\b")
             numbers = number_pattern.findall(content)
@@ -142,8 +96,6 @@ class Utils:
 
     @staticmethod
     def extract_links(text):
-        if text is None:
-            return
         url_pattern = r"https?://[^\s]+"
         return re.findall(url_pattern, text)
 
@@ -212,7 +164,6 @@ class Utils:
      client = imgbbpy.SyncClient(config("IMGBB_KEY", default=None))
      if client:
       image = client.upload(file=img_path)
-      print(image)
       return image.url
      
     

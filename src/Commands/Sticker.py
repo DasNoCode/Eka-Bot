@@ -23,7 +23,6 @@ class Command(BaseCommand):
         )
 
     async def exec(self, M: Message, context):
-        print(M.msg_type)
         allowed_types = ["photo", "animation", "gif"]
         if M.msg_type not in allowed_types:
             await self.client.send_message(M.chat_id, "Only photo, animation, or gif files are supported.")

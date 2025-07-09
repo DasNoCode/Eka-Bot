@@ -45,6 +45,7 @@ class Command(BaseCommand):
         return self.user_points > self.bot_points
 
     async def exec(self, M: Message, context):
+        print(context)
         if context[2].get("type") == "rounds":
             try:
                 self.target_rounds = int(context[2].get("data"))
