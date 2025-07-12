@@ -14,8 +14,6 @@ src/
 ├── Handler/               # Handles messages and events
 │   └── MessageHandler.py  # Core message handling logic
 ├── Structures/            # Custom classes and DB logic
-├── config/
-│   └── settings.py        # Bot settings (tokens, config)
 ├── utils/
 │   └── helpers.py         # Helper functions
 └── requirements.txt       # All required packages
