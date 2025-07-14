@@ -1,10 +1,8 @@
 import os
 import sys
-
 from decouple import config
 from pyrogram import filters
 from pyrogram.types import CallbackQuery
-
 from Handler.EventHandler import EventHandler
 from Handler.MessageHandler import MessageHandler
 from Structures.Client import SuperClient
@@ -20,7 +18,7 @@ bot_id = config("BOT_ID", default=None, cast=int)
 user_db_filepath = config("USER_DB_FILEPATH", default="UserDatabse.json")
 chat_db_filepath = config("CHAT_DB_FILEPATH", default="ChatDatabse.json")
 bot_name_ASCII = config("BOT_NAME_ASCII", default="Bot is Online!")
-
+imgbb_id = config("IMGBB_KEY", default=None)
 
 
 Bot = SuperClient(
@@ -32,7 +30,8 @@ Bot = SuperClient(
     chat_db_filepath=chat_db_filepath,
     prefix=prefix,
     owner_id=owner_id,
-    bot_id=bot_id
+    bot_id=bot_id,
+    imgbb_id=imgbb_id
 
 )
 
@@ -54,17 +53,17 @@ instance.loadCommands("src/Commands")
     ),
     group=-1,
 )
-async def on_message(client: SuperClient, message: Message):
+async def on_message(client: Bot, message: Message): # type: ignore
     await instance.handler(await Message(client, message).build())
 
 
 @Bot.on_callback_query()
-async def on_callback(client: SuperClient, callback: CallbackQuery):
+async def on_callback(client: Bot, callback: CallbackQuery): # type: ignore
     await instance.handler(await Message(client, callback).build())
 
 
 @Bot.on_message(filters.service)
-async def new_member(client: SuperClient, message: Message):
+async def new_member(client: Bot, message: Message): # type: ignore
     await eventInstance.handler(message)
 
 

@@ -23,7 +23,8 @@ class Command(BaseCommand):
         )
 
     async def exec(self, message: Message, context):
-        chat_data = self.client.db.Chat.get_chat_data(message.chat_id)
+        chat_data = self.client.db.Chat.get_all_chat_datas()
+        user_data = self.client.db.User.get_all_users()
 
         if not message.reply_to_message or not message.reply_to_message.text:
             return await self.client.send_message(
@@ -32,7 +33,12 @@ class Command(BaseCommand):
 
         broadcast_text = message.reply_to_message.text
 
-        for target_chat_id in chat_data.get("chat_id"):
+        for target_chat_id in chat_data:
             await self.client.send_message(
-                target_chat_id, f"**📣 BROADCAST MESSAGE**\n\n{broadcast_text}"
+                target_chat_id.get("chat_id"), f"**📣 BROADCAST MESSAGE**\n\n{broadcast_text}"
             )
+        for target_chat_id in user_data:
+            if target_chat_id.get("user_id"):
+                await self.client.send_message(
+                    target_chat_id.get("user_id"), f"**📣 BROADCAST MESSAGE**\n\n{broadcast_text}"
+                )

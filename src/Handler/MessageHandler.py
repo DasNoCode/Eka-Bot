@@ -23,45 +23,54 @@ class MessageHandler:
         isCommand = messageText.startswith(self.__client.prifix)
 
         # === AFK Handling ===
+        bot_id = self.__client.bot_id 
+        
         mentionedUser = M.mentioned[0] if M.mentioned else None
         mentionedUserId = getattr(mentionedUser, "user_id", None)
-        mentionedAFK = (
-            self.__client.db.User.get_user(mentionedUserId).get("afk", {"is_afk": False})
-            if mentionedUserId else {"is_afk": False}
-        )
-
+        
+        if mentionedUserId and mentionedUserId != bot_id:
+            mentionedAFK = self.__client.db.User.get_user(mentionedUserId).get("afk", {"is_afk": False})
+        else:
+            mentionedAFK = {"is_afk": False}
+        
         repliedUser = getattr(M.reply_to_message, "replied_user", None)
         repliedUserId = repliedUser.user_id if repliedUser else None
-        repliedAFK = self.__client.db.User.get_user(repliedUserId).get("afk", {"is_afk": False})
+        
+        if repliedUserId and repliedUserId != bot_id:
+            repliedAFK = self.__client.db.User.get_user(repliedUserId).get("afk", {"is_afk": False})
+        else:
+            repliedAFK = {"is_afk": False}
+        
         commandName = commandContext[0]
         commandObj = self.commandMap.get(commandName)
         userData = self.__client.db.User.get_user(M.sender.user_id)
-        
 
         # Remove AFK if the user sends any message (except /afk)
         if M.message.split()[0] != "/afk":
             if userData.get("afk", {}).get("is_afk"):
-                currentTime = datetime.now().time().strftime("%H:%M:%S")
-                self.__client.db.User.set_afk(M.sender.user_id, False, None, currentTime)
                 commandObj = self.commandMap.get("afk")
                 await commandObj.exec(M, self.parseArgs(f"--type=afk_btn --user_id={M.sender.user_id}"))
     
         # Handle mentioned AFK user
         if mentionedAFK["is_afk"]:
+            if self.__client.bot_id == mentionedUserId:
+                return
             self.add_tagged_message(mentionedUserId, M.message_id, M.chat_id)
             return await self.__client.send_message(
                 M.chat_id,
                 f"@{M.sender.user_name} @{mentionedUser.user_name} is currently offline.\n"
-                f"**Reason** : {mentionedAFK.get('afk_reason', 'None')}"
+                f"**Reason** : {mentionedAFK.get('afk_reason') if mentionedAFK.get('afk_reason') else 'No reason given' }"
             )
     
         # Handle replied AFK user
         if repliedAFK["is_afk"]:
+            if self.__client.bot_id == repliedUserId:
+                return
             self.add_tagged_message(repliedUserId, M.message_id, M.chat_id)
             return await self.__client.send_message(
                 M.chat_id,
                 f"@{M.sender.user_name} @{repliedUser.user_name} is currently offline.\n"
-                f"**Reason** : {repliedAFK.get('afk_reason', 'None')}"
+                f"**Reason** : {repliedAFK.get('afk_reason') if repliedAFK.get('afk_reason') else 'No reason given' }"
             )
 
 
@@ -81,6 +90,9 @@ class MessageHandler:
         
         if commandObj.config.ChatOnly and M.chat_type not in ["GROUP", "SUPERGROUP", "CHANNEL"]:
             return await self.__client.send_message(M.chat_id, f"@{M.sender.user_name} this command can't be used in PRIVATE chat!")
+        
+        if self.__client.db.User.get_user(M.sender.user_id).get("ban").get("is_ban"):
+            return
         
         if messageText == self.__client.prifix:
             return await self.__client.send_message(
@@ -177,7 +189,7 @@ class MessageHandler:
     def add_tagged_message(self, user_id, message_id, chat_id):
         data = self.__client.db.User.get_user(user_id)
         tagged_msgs = data.get("afk", {}).get("tagged_msgs", [])
-        new_entry = (message_id, chat_id)
+        new_entry = {"message_id": message_id, "chat_id":chat_id}
         tagged_msgs.append(new_entry)
         self.__client.db.User.update_user(user_id, {"afk": {"tagged_msgs": tagged_msgs}})
 

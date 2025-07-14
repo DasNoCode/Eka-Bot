@@ -18,7 +18,8 @@ class SuperClient(Client):
         chat_db_filepath: str,
         prefix: str,
         owner_id: int,
-        bot_id:int
+        bot_id:int,
+        imgbb_id:str
     ):
         super().__init__(
             name=name, api_id=api_id, api_hash=api_hash, bot_token=bot_token
@@ -29,11 +30,12 @@ class SuperClient(Client):
         self.utils = Utils()
         self.owner_id = owner_id
         self.bot_id = bot_id
+        self.imgbb_id = imgbb_id
 
 
     @property
     def db(self):
-        return db(self.database)
+        return db(self, self.database)
 
     async def admincheck(self, message):
         if message.chat_type in ["GROUP", "SUPERGROUP", "CHANNEL"]:

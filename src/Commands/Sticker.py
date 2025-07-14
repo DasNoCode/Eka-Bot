@@ -23,11 +23,10 @@ class Command(BaseCommand):
         )
 
     async def exec(self, M: Message, context):
-        allowed_types = ["photo", "animation", "gif"]
+        allowed_types = ["photo", "animation", "gif","video"]
         if M.msg_type not in allowed_types:
             await self.client.send_message(M.chat_id, "Only photo, animation, or gif files are supported.")
             return
-
         ext = "jpg" if M.msg_type == "photo" else "gif"
         file_base = f"{M.file_id}"
         download_path = f"Images/{file_base}.{ext}"

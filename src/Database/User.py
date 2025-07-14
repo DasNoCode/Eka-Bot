@@ -3,9 +3,10 @@ from datetime import datetime
 
 
 class User:
-    def __init__(self, db, query):
+    def __init__(self, db, query, client):
         self.__db = db
         self.query = query
+        self.__client = client
         if not self.__db.contains(self.query.users.exists()):
             self.__db.insert({"users": []})
 
@@ -14,7 +15,7 @@ class User:
         return users_data["users"]
     
     def add_user(self, user_data):
-
+        
         users_list = self.get_all_users()
         if any(user["user_id"] == user_data["user_id"] for user in users_list):
             return
@@ -41,8 +42,7 @@ class User:
             "ban": {
                 "no_of": user_data.get("ban", {}).get("no_of", 0),
                 "is_ban": user_data.get("ban", {}).get("is_ban", False),
-                "reason": user_data.get("ban", {}).get("reason", None),
-                "time": user_data.get("ban", {}).get("time", None),
+                "reason": user_data.get("ban", {}).get("reason", None)
             },
         }
 
@@ -50,6 +50,8 @@ class User:
         self.__db.update({"users": users_list}, self.query.users.exists())
     
     def get_user(self, user_id):
+        if self.__client.bot_id == user_id:
+            return
         users_list = self.get_all_users()
         user = next((u for u in users_list if u["user_id"] == user_id), None)
         if user:
@@ -102,11 +104,11 @@ class User:
         user["rps"] += 1
         self.update_user(user_id, user)
 
-    def update_ban(self, user_id, is_ban, time, reason=None):
+    def update_ban(self, user_id, is_ban, reason=None):
         user = self.get_user(user_id)
         if not user:
             return
-        user["ban"] = {"is_ban": is_ban, "reason": reason, "time": time}
+        user["ban"] = {"is_ban": is_ban, "reason": reason}
         self.update_user(user_id, user)
 
     def set_afk(self, user_id, is_afk, afk_reason="", time=None):

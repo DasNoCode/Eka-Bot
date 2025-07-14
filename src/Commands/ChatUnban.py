@@ -9,15 +9,15 @@ class Command(BaseCommand):
             client,
             handler,
             {
-                "command": "chatban",
+                "command": "chatunban",
                 "category": "chat",
                 "xp": False,
                 "AdminOnly": True,
                 "OwnerOnly": False,
                 "ChatOnly": True,
                 "description": {
-                    "content": "Ban a user from the current chat. Admins only.",
-                    "usage": "/chatban @username\nor\nReply to a user's message with /chatban"
+                    "content": "unban a user from the current chat. Admins only.",
+                    "usage": "/chatunban @username\nor\nReply to a user's message with /chatunban"
                 },
             },
         )
@@ -30,18 +30,14 @@ class Command(BaseCommand):
             target_user = message.mentioned[0]
         else:
             return await self.client.send_message(
-                message.chat_id, f"@{message.sender.user_name}, please reply to or mention a user to ban."
+                message.chat_id, f"@{message.sender.user_name}, please reply to or mention a user to unban."
             )
 
         user_name = target_user.user_name
         user_id = target_user.user_id
-        if user_id == self.client.bot_id or user_id == self.client.owner_id:
-            return await self.client.send_message(
-                message.chat_id, f"@{user_name}, you can't ban me nor the owner !"
-            )
-        
-        await self.client.ban_chat_member(message.chat_id, user_id)
+
+        await self.client.unban_chat_member(message.chat_id, user_id)
         await self.client.send_message(
             message.chat_id,
-            f"Successfully **banned** @{user_name} from {message.chat_title}.",
+            f"Successfully **unbanned** @{user_name} from {message.chat_title}.",
         )

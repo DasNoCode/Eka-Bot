@@ -1,5 +1,6 @@
 import asyncio
 import base64
+from datetime import datetime, timedelta
 import os
 import random
 import re
@@ -10,7 +11,8 @@ import requests
 from bs4 import BeautifulSoup
 from moviepy.video.io.VideoFileClip import VideoFileClip
 from decouple import config
-
+import subprocess
+from pathlib import Path
 
 
 class Utils:
@@ -98,6 +100,62 @@ class Utils:
     def extract_links(text):
         url_pattern = r"https?://[^\s]+"
         return re.findall(url_pattern, text)
+    
+    @staticmethod
+    def convert_to_webp(input_path, width=512, fps=15, loop=True, compress=6):
+        input_path = Path(input_path)
+        output_path = input_path.with_suffix(".webp")
+    
+        if not input_path.exists():
+            print("❌ File not found.")
+            return
+    
+        file_ext = input_path.suffix.lower()
+        type_ = "image" if file_ext in [".jpg", ".jpeg", ".png"] else "video"
+    
+        # Get file size for quality logic
+        buffer_size = input_path.stat().st_size
+        if buffer_size < 300_000:
+            quality = "30"
+        elif buffer_size < 400_000:
+            quality = "20"
+        else:
+            quality = "15"
+        
+        if type_ == "image":
+            quality = "75"
+    
+        vf_filter = (
+            f"scale='min({width},iw)':min'({width},ih)':force_original_aspect_ratio=decrease,"
+            f"fps={fps},"
+            f"pad={width}:{width}:-1:-1:color=white@0.0,"
+            "split[a][b];"
+            "[a]palettegen=reserve_transparent=on:transparency_color=ffffff[p];"
+            "[b][p]paletteuse"
+        )
+    
+        command = [
+            "ffmpeg",
+            "-y",  # overwrite
+            "-i", str(input_path),
+            "-vf", vf_filter,
+            "-loop", "0" if loop else "1",
+            "-lossless", "1" if type_ == "image" else "0",
+            "-compression_level", str(compress),
+            "-quality", quality,
+            "-preset", "picture",
+            "-an",
+            "-vsync", "0",
+            "-f", "webp",
+            str(output_path)
+        ]
+    
+        try:
+            subprocess.run(command, check=True)
+            print(f"✅ Converted: {output_path}")
+        except subprocess.CalledProcessError:
+            print("❌ ffmpeg failed to convert the file.")
+
 
     @staticmethod
     def gif_to_mp4(gif):
@@ -161,11 +219,30 @@ class Utils:
 
     @staticmethod
     def img_to_url(img_path):
-     client = imgbbpy.SyncClient(config("IMGBB_KEY", default=None))
-     if client:
-      image = client.upload(file=img_path)
-      return image.url
+        client = imgbbpy.SyncClient(config("IMGBB_KEY", default=None))
+        if client:
+            image = client.upload(file=img_path)
+            return image.url
      
     
+    @staticmethod
+    def get_tenor_gif_urls(search_query: str, limit: int = 30) -> list:
+        api_key = "LIVDSRZULELA"
+        url = f"https://g.tenor.com/v1/search?q={search_query}&key={api_key}&limit={limit}"
 
+        response = requests.get(url)
+
+        if response.status_code != 200:
+            return(f"Failed to fetch from Tenor: {response.status_code}")
+
+        data = response.json()
+        gif_urls = []
+   
+        for result in data.get("results", []):
+           gif_data = result.get("media", [])[0].get("gif", {})
+           gif_url = gif_data.get("url")
+           if gif_url:
+               gif_urls.append(gif_url)
+   
+        return gif_urls
 

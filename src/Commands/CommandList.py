@@ -36,6 +36,7 @@ class Command(BaseCommand):
         help_text = (
             "🤖 **Command List**\n\n"
             "💡 **Prefix:** `/`\n\n"
+            "**Support Group:** @KoalaSuppot\n"
             "🎋 **Support us by following us on Instagram:**\n"
             "https://www.instagram.com/das_abae\n\n"
             "This help menu is designed to help you get started with the bot.\n\n"
